@@ -32,8 +32,7 @@ ui <- navbarPage(title = "Code Name", id = "Dash",
                  tabPanel("Plateau de Jeu", value = "Plateau", hidden = TRUE,
                   # Mouse Panel 
                    fluidRow(
-                     column(3, br(), DTOutput("List")),
-                     column(9, align = "center",
+                     column(12, align = "center",
                             checkboxInput("Reveal", label = "Maitre du Jeu",
                                           value = FALSE),
                             br(), 
@@ -64,36 +63,7 @@ server <- function(input, output, session) {
   })
   
   # Second Panel ----
-  
-  output$List <- renderDT({
-    set.seed(as.numeric(input$code))
-    ordre <- sample(0:24, 25)
-    colors <- data.frame(place = ordre,
-                         color = c(rep("Bleu", 9),
-                                   rep("Rouge", 8),
-                                   "Noir",
-                                   rep("Gris", 7)),
-                         stringsAsFactors = FALSE)
-    set.seed(as.numeric(input$code))
-    Noms <- sample(names, 25)
-    Noms <- data.frame("Noms" = Noms, stringsAsFactors = FALSE) %>%
-      mutate(place = 0:24) %>%
-      mutate(x = place %% 5,
-             y = (place - x) / 5) %>%
-      full_join(colors) %>%
-      mutate(displayed_colors = "Gris")
-    Noms <- Noms %>% select(Noms)
-    df <- datatable(Noms,
-                    rownames = F,
-                    options = list(paging = T, pageLength = 25,
-                                   columnDefs = list(list(className = 'dt-center',
-                                                          targets = 0))
-                    ))
-  }, server = T)
-  
-  List <- dataTableProxy('List')
-  
-  output$plateau <- renderPlot({
+  Noms <- reactive({
     set.seed(as.numeric(input$code))
     ordre <- sample(0:24, 25)
     colors <- data.frame(place = ordre,
@@ -110,8 +80,15 @@ server <- function(input, output, session) {
              y = (place - x) / 5) %>%
       full_join(colors) %>%
       mutate(displayed_colors = "transparent")
-    colors <- input$List_rows_selected
-    Noms$displayed_colors[colors] <- Noms$color[colors]
+  })
+  
+  output$plateau <- renderPlot({
+    Noms <- Noms()
+    if (!is.null(cases$selectedData)) {
+      clicked <- Noms$Noms %in% cases$selectedData
+      Noms$displayed_colors[clicked] <- Noms$color[clicked]
+    }
+    
     p <- ggplot(Noms) +
       theme_void()
     if (input$Reveal) {
@@ -139,6 +116,22 @@ server <- function(input, output, session) {
     p <- p +
       geom_text(aes(x = x, y = y, label = Noms), size = 7) 
     return(p)
+  })
+  
+  cases <- reactiveValues(
+    selectedData = NULL
+  )
+  
+  observeEvent(input$plot_dblclick, {
+    case <- nearPoints(Noms(), input$plot_dblclick, maxpoints = 1,
+                       xvar = "x", yvar = "y", threshold = 100)
+    if (is.null(cases$selectedData)) {
+      cases$selectedData <- case$Nom
+    } else {
+      if (!case$Noms %in% cases$selectedData) {
+      cases$selectedData <- c(cases$selectedData, case$Noms)
+      }
+    }
   })
 }
 
