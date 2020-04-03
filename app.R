@@ -109,7 +109,7 @@ server <- function(input, output, session) {
       mutate(x = place %% 5,
              y = (place - x) / 5) %>%
       full_join(colors) %>%
-      mutate(displayed_colors = "Gris")
+      mutate(displayed_colors = "transparent")
     colors <- input$List_rows_selected
     Noms$displayed_colors[colors] <- Noms$color[colors]
     p <- ggplot(Noms) +
@@ -121,8 +121,8 @@ server <- function(input, output, session) {
                   alpha = .7, size = 2) +
         scale_fill_manual(values = c("Rouge" = "#E41A1C",
                                      "Bleu" = "#377EB8",
-                                     "Noir" = "Grey",
-                                     "Gris" = "transparent")) +
+                                     "Noir" = "#525252",
+                                     "Gris" = "#D9D9D9")) +
         guides(fill = FALSE)
     } else {
       p <-  p +
@@ -131,8 +131,9 @@ server <- function(input, output, session) {
                   alpha = .7) +
         scale_fill_manual(values = c("Rouge" = "#E41A1C",
                                      "Bleu" = "#377EB8",
-                                     "Noir" = "Grey",
-                                     "Gris" = "transparent")) +
+                                     "Noir" = "#525252",
+                                     "Gris" = "#D9D9D9",
+                                     "transparent" = "transparent")) +
         guides(fill = FALSE)
     }
     p <- p +
