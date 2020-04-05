@@ -93,13 +93,25 @@ server <- function(input, output, session) {
       theme_void()
     if (input$Reveal) {
       p <- p +
-        geom_tile(aes(x = x, y = y, fill = color)
-                  , height = .9, width = .9, col = "black",
+        geom_tile(aes(x = x, y = y, fill = color),
+                  height = .9, width = .9, col = "black",
                   alpha = .7, size = 2) +
+        geom_text(aes(x = x, y = y, label = Noms), size = 7) +
+        geom_tile(aes(x = x, y = y, fill = displayed_colors),
+                  height = .9, width = .9, col = "black", size = 2,
+                  data = Noms %>% 
+                    mutate(displayed_colors = paste0(displayed_colors, "_"))) +
+        
         scale_fill_manual(values = c("Rouge" = "#E41A1C",
                                      "Bleu" = "#377EB8",
                                      "Noir" = "#525252",
-                                     "Gris" = "#D9D9D9")) +
+                                     "Gris" = "#D9D9D9",
+                                     "transparent_" = "transparent",
+                                     "Gris_" = "#D9D9D9",
+                                     "Rouge_" = "#E41A1C",
+                                     "Bleu_" = "#377EB8",
+                                     "Noir_" = "#525252"
+                                     )) +
         guides(fill = FALSE)
     } else {
       p <-  p +
@@ -111,10 +123,9 @@ server <- function(input, output, session) {
                                      "Noir" = "#525252",
                                      "Gris" = "#D9D9D9",
                                      "transparent" = "transparent")) +
+        geom_text(aes(x = x, y = y, label = Noms), size = 7) +
         guides(fill = FALSE)
     }
-    p <- p +
-      geom_text(aes(x = x, y = y, label = Noms), size = 7) 
     return(p)
   })
   
